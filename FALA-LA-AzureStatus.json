@@ -1,0 +1,128 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each": {
+                "actions": {
+                    "Post_a_tweet": {
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['twitter']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/posttweet",
+                            "queries": {
+                                "tweetText": "AKS Update - @{items('For_each')['title']} @{items('For_each')?['primaryLink']}"
+                            }
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "foreach": "@body('List_all_RSS_feed_items_-_AKS')",
+                "runAfter": {
+                    "List_all_RSS_feed_items_-_AKS": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "For_each_2": {
+                "actions": {
+                    "Post_a_tweet_2": {
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['twitter']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/posttweet",
+                            "queries": {
+                                "tweetText": "@{items('For_each_2')['title']} @{items('For_each_2')?['primaryLink']}"
+                            }
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "foreach": "@body('List_all_RSS_feed_items_-_Azure')",
+                "runAfter": {
+                    "List_all_RSS_feed_items_-_Azure": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "List_all_RSS_feed_items_-_AKS": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['rss']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/ListFeedItems",
+                    "queries": {
+                        "feedUrl": "https://github.com/Azure/AKS/releases.atom",
+                        "since": "@{addDays(utcNow(), -1)}"
+                    }
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            },
+            "List_all_RSS_feed_items_-_Azure": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['rss']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/ListFeedItems",
+                    "queries": {
+                        "feedUrl": "https://azurecomcdn.azureedge.net/en-us/updates/feed/",
+                        "since": "@{addDays(utcNow(), -1)}"
+                    }
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Recurrence": {
+                "recurrence": {
+                    "frequency": "Day",
+                    "interval": 1
+                },
+                "type": "Recurrence"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "rss": {
+                    "connectionId": "/subscriptions/SubId/resourceGroups/FALA-LogicApp/providers/Microsoft.Web/connections/rss",
+                    "connectionName": "rss",
+                    "id": "/subscriptions/SubId/providers/Microsoft.Web/locations/westeurope/managedApis/rss"
+                },
+                "twitter": {
+                    "connectionId": "/subscriptions/SubId/resourceGroups/FALA-LogicApp/providers/Microsoft.Web/connections/twitter",
+                    "connectionName": "twitter",
+                    "id": "/subscriptions/SubId/providers/Microsoft.Web/locations/westeurope/managedApis/twitter"
+                }
+            }
+        }
+    }
+}
